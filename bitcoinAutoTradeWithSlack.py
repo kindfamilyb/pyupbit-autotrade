@@ -85,6 +85,11 @@ while True:
         start_time = get_start_time("KRW-BTC")
         end_time = start_time + datetime.timedelta(days=1)
 
+        # 매일 오전 11시 30분에 잔고 & 접속확인 알람
+        if now.hour == 12 and now.minute == 1 and now.second <= 5:
+            get_total_balances_alert()
+            time.sleep(5)
+
         if start_time < now < end_time - datetime.timedelta(seconds=10):
             target_price = get_target_price("KRW-BTC", 0.5)
             ma15 = get_ma15("KRW-BTC")
