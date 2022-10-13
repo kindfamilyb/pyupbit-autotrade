@@ -2,10 +2,17 @@ import time
 import pyupbit
 import datetime
 import requests
+import yaml
 
-access = "your-access"
-secret = "your-secret"
-myToken = "xoxb-your-token"
+with open('config.yaml', encoding='UTF-8') as f:
+    _cfg = yaml.load(f, Loader=yaml.FullLoader)
+upbit_access = _cfg['UPBIT_ACCESS']
+upbit_secret = _cfg['UPBIT_SECRET']
+slack_myToken = _cfg['SLACK_TOKEN']
+
+access = upbit_access
+secret = upbit_secret
+myToken = slack_myToken
 
 def post_message(token, channel, text):
     """슬랙 메시지 전송"""
