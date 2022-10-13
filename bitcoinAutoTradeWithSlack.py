@@ -86,7 +86,7 @@ while True:
         end_time = start_time + datetime.timedelta(days=1)
 
         # 매일 오전 11시 30분에 잔고 & 접속확인 알람
-        if now.hour == 12 and now.minute == 1 and now.second <= 5:
+        if now.hour == 11 and now.minute == 30 and now.second <= 5:
             get_total_balances_alert()
             time.sleep(5)
 
