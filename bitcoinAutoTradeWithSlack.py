@@ -50,15 +50,34 @@ def get_balance(ticker):
                 return 0
     return 0
 
+def get_total_balances_alert():
+    """접속확인 및 잔고표시 알람"""
+    total_balances = upbit.get_balances()
+    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    print('============')
+    post_message(myToken,"#crypto", "============")
+    for x in total_balances:
+        for i in x:
+            print(f'{i} : {x[i]}')
+            post_message(myToken,"#crypto", f'{i} : {x[i]}')
+    print(now)
+    post_message(myToken,"#crypto", f'업데이트시간: {now}')
+    print('============')
+    post_message(myToken,"#crypto", "============")
+    post_message(myToken,"#crypto", "            ")
+
 def get_current_price(ticker):
     """현재가 조회"""
     return pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]
 
 # 로그인
 upbit = pyupbit.Upbit(access, secret)
+
+# 시작 메세지(잔고,시작메시지) 슬랙 전송
+get_total_balances_alert()
 print("autotrade start")
-# 시작 메세지 슬랙 전송
-post_message(myToken,"#crypto", "autotrade start")
+post_message(myToken,"#crypto", "autotrade start") 
 
 while True:
     try:
