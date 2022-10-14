@@ -85,8 +85,8 @@ while True:
         start_time = get_start_time("KRW-BTC")
         end_time = start_time + datetime.timedelta(days=1)
 
-        # 매일 오전 11시 30분에 잔고 & 접속확인 알람
-        if now.hour == 11 and now.minute == 30 and now.second <= 5:
+        # 매일 3,6,9,12,15,18,21,24시 30분에 접속확인 알람
+        if now.hour % 3 == 0 and now.minute == 30 and now.second <= 5:
             get_total_balances_alert()
             time.sleep(5)
 
