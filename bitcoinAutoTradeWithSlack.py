@@ -50,6 +50,10 @@ def get_balance(ticker):
                 return 0
     return 0
 
+def get_stock_balance():
+    bought_list = [x['currency'] for x in upbit.get_balances()]
+    return bought_list
+
 def get_total_balances_alert():
     """접속확인 및 잔고표시 알람"""
     total_balances = upbit.get_balances()
@@ -81,6 +85,7 @@ post_message(myToken,"#crypto", "autotrade start")
 
 while True:
     try:
+        stock_dict = get_stock_balance() # 보유 코인 조회
         now = datetime.datetime.now()
         start_time = get_start_time("KRW-BTC")
         end_time = start_time + datetime.timedelta(days=1)
