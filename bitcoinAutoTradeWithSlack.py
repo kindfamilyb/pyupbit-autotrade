@@ -23,19 +23,19 @@ def post_message(token, channel, text):
 
 def get_target_price(ticker, k):
     """변동성 돌파 전략으로 매수 목표가 조회"""
-    df = pyupbit.get_daily_ohlcv_from_base(ticker="KRW-BTC", base=23.99)[-2:]
+    df = pyupbit.get_daily_ohlcv_from_base(ticker=ticker, base=23.99)[-2:]
     target_price = df.iloc[0]['close'] + (df.iloc[0]['high'] - df.iloc[0]['low']) * k
     return target_price
 
 def get_start_time(ticker):
     """시작 시간 조회"""
-    df = pyupbit.get_daily_ohlcv_from_base(ticker="KRW-BTC", base=23.99)[-1:]
+    df = pyupbit.get_daily_ohlcv_from_base(ticker=ticker, base=23.99)[-1:]
     start_time = df.index[0]
     return start_time
 
 def get_ma5(ticker):
     """5일 이동 평균선 조회"""
-    df = pyupbit.get_daily_ohlcv_from_base(ticker="KRW-BTC", base=23.99)[4:]
+    df = pyupbit.get_daily_ohlcv_from_base(ticker=ticker, base=23.99)[4:]
     ma5 = df['close'].rolling(5).mean().iloc[-1]
     return ma5
 
