@@ -81,9 +81,6 @@ def get_total_balances_alert():
     post_message(myToken,"#crypto", "============")
     post_message(myToken,"#crypto", "            ")
 
-def get_current_price(ticker):
-    """현재가 조회"""
-    return pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]
 
 def get_target_price_buy_percent(try_symbol_list):
     # 5일 이평선 이상인 종목 가져오기
