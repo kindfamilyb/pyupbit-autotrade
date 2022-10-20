@@ -66,22 +66,24 @@ def get_stock_balance():
     bought_list = [x['currency'] for x in upbit.get_balances()]
     return bought_list
 
-def get_total_balances_alert():
+def get_total_balances_alert(try_symbol_list):
     """접속확인 및 잔고표시 알람"""
-    total_balances = upbit.get_balances()
-    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    # 변경할 사항 : ma5이평선 이상 종목 및 타겟프라이스 표시해주기
+    ma5_checked_try_symbol_list = []
+    ma5_checked_try_symbol_list = get_ma5_checked_try_symbol_list(try_symbol_list)
 
-    print('============')
-    post_message(myToken,"#crypto", "============")
-    for x in total_balances:
-        for i in x:
-            print(f'{i} : {x[i]}')
-            post_message(myToken,"#crypto", f'{i} : {x[i]}')
-    print(now)
-    post_message(myToken,"#crypto", f'업데이트시간: {now}')
-    print('============')
-    post_message(myToken,"#crypto", "============")
-    post_message(myToken,"#crypto", "            ")
+    if len(ma5_checked_try_symbol_list) == 0:
+        print("하락장")
+        return
+    
+    print("상승장(매수예정코인리스트)")
+    post_message(myToken,"#crypto", "상승장(매수예정코인리스트)") 
+    for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
+        # 표시해줄 요소
+        # 티커 : 현재가 / 타겟프라이스 
+        message = f'{ma5_checked_try_symbol} {get_current_price(ma5_checked_try_symbol)} / {get_target_price(ma5_checked_try_symbol, 0.5)}'
+        print(message)
+        post_message(myToken,"#crypto", message) 
 
 
 def get_target_price_buy_percent(try_symbol_list):
