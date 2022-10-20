@@ -91,6 +91,10 @@ post_message(myToken,"#crypto", "autotrade start")
 
 while True:
     try:
+        try_symbol_list = ["KRW-BTC","KRW-XRP","KRW-ETH"] # 매수 희망 종목 리스트
+        ma5_checked_try_symbol_list = []
+        # 매수 희망 종목 리스트중 '5일이평선 이상' 조건 종목만 추려내기
+        get_ma5_checked_try_symbol_list(try_symbol_list)
         stock_dict = get_stock_balance() # 보유 코인 조회
         now = datetime.datetime.now()
         start_time = get_start_time("KRW-BTC")
@@ -102,14 +106,15 @@ while True:
             time.sleep(5)
 
         if start_time < now < end_time - datetime.timedelta(seconds=10):
-            target_price = get_target_price("KRW-BTC", 0.5)
-            ma5 = get_ma5("KRW-BTC")
-            current_price = get_current_price("KRW-BTC")
-            if target_price < current_price and ma5 < current_price:
+            if len(bought_list) < target_buy_count:
+                for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
+                    target_price = get_target_price(ma5_checked_try_symbol, 0.5)
+                    current_price = get_current_price(ma5_checked_try_symbol)
                 krw = get_balance("KRW")
                 if krw > 5000:
-                    buy_result = upbit.buy_market_order("KRW-BTC", krw*0.9995)
-                    post_message(myToken,"#crypto", "BTC buy : " +str(buy_result))
+                                buy_result = upbit.buy_market_order(ma5_checked_try_symbol, krw*0.9995)
+                                post_message(myToken,"#crypto", f'{ma5_checked_try_symbol} buy : {str(buy_result)}' )
+                                soldout = False
         else:
             btc = get_balance("BTC")
             if btc > 0.00008:
