@@ -14,6 +14,8 @@ access = upbit_access
 secret = upbit_secret
 myToken = slack_myToken
 
+try_symbol_list = ["KRW-BTC","KRW-XRP","KRW-ETH"] # 매수 희망 종목 리스트
+
 def post_message(token, channel, text):
     """슬랙 메시지 전송"""
     response = requests.post("https://slack.com/api/chat.postMessage",
@@ -112,7 +114,6 @@ post_message(myToken,"#crypto", "autotrade start")
 
 while True:
     try:
-        try_symbol_list = ["KRW-BTC","KRW-XRP","KRW-ETH"] # 매수 희망 종목 리스트
         # 매수 희망 종목 리스트중 '5일이평선 이상' 조건 종목만 추려내기
         ma5_checked_try_symbol_list = []
         ma5_checked_try_symbol_list = get_ma5_checked_try_symbol_list(try_symbol_list)
