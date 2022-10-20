@@ -39,6 +39,12 @@ def get_ma5(ticker):
     ma5 = df['close'].rolling(5).mean().iloc[-1]
     return ma5
 
+def get_ma5_checked_try_symbol_list(try_symbol_list):
+    for try_symbol in try_symbol_list:
+        if get_ma5(try_symbol) > get_current_price(try_symbol):
+            ma5_checked_try_symbol_list.append(try_symbol)
+    return ma5_checked_try_symbol_list
+
 def get_balance(ticker):
     """잔고 조회"""
     balances = upbit.get_balances()
