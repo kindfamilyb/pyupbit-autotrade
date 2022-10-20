@@ -149,8 +149,8 @@ while True:
                         buy_qty = 0 # 매수할 수량 초기화
                         buy_qty = int(buy_amount // current_price)
                         if buy_qty > 0:
-                krw = get_balance("KRW")
-                if krw > 5000:
+                            krw = get_balance("KRW")
+                            if krw > 5000:
                                 buy_result = upbit.buy_market_order(ma5_checked_try_symbol, krw*0.9995)
                                 post_message(myToken,"#crypto", f'{ma5_checked_try_symbol} buy : {str(buy_result)}' )
                                 soldout = False
