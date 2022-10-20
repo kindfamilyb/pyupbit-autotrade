@@ -98,6 +98,8 @@ while True:
         bought_list = [] # 매수 완료된 종목 리스트
         total_cash = get_balance("KRW") # 보유 현금 조회
         stock_dict = get_stock_balance() # 보유 코인 조회
+        for purchased_sym in stock_dict:
+            bought_list.append(purchased_sym)
         target_buy_count = 3 # 매수할 종목 수
         buy_percent = 0.33 # 종목당 매수 금액 비율
         buy_amount = total_cash * buy_percent  # 종목별 주문 금액 계산
@@ -126,10 +128,12 @@ while True:
                                 post_message(myToken,"#crypto", f'{ma5_checked_try_symbol} buy : {str(buy_result)}' )
                                 soldout = False
         else:
-            btc = get_balance("BTC")
-            if btc > 0.00008:
-                sell_result = upbit.sell_market_order("KRW-BTC", btc*0.9995)
-                post_message(myToken,"#crypto", "BTC buy : " +str(sell_result))
+            for sym in bought_list:
+                coin_balance = get_balance(sym)
+                changed_sym_for_sell = 'KRW-' + sym[0:]
+                sell_result = upbit.sell_market_order(changed_sym_for_sell, coin_balance)
+                post_message(myToken,"#crypto", f'BTC buy :{str(sell_result)}')
+            soldout = True
         time.sleep(1)
     except Exception as e:
         print(e)
