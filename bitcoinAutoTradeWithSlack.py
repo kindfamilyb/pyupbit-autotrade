@@ -27,6 +27,10 @@ def get_target_price(ticker, k):
     target_price = df.iloc[0]['close'] + (df.iloc[0]['high'] - df.iloc[0]['low']) * k
     return target_price
 
+def get_current_price(ticker):
+    """현재가 조회"""
+    return pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]
+
 def get_start_time(ticker):
     """시작 시간 조회"""
     df = pyupbit.get_daily_ohlcv_from_base(ticker=ticker, base=23.99)[-1:]
