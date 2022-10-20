@@ -114,7 +114,9 @@ while True:
         try_symbol_list = ["KRW-BTC","KRW-XRP","KRW-ETH"] # 매수 희망 종목 리스트
         ma5_checked_try_symbol_list = []
         # 매수 희망 종목 리스트중 '5일이평선 이상' 조건 종목만 추려내기
-        get_ma5_checked_try_symbol_list(try_symbol_list)
+        ma5_checked_try_symbol_list = []
+        ma5_checked_try_symbol_list = get_ma5_checked_try_symbol_list(try_symbol_list)
+
         bought_list = [] # 매수 완료된 종목 리스트
         total_cash = get_balance("KRW") # 보유 현금 조회
         stock_dict = get_stock_balance() # 보유 코인 조회
