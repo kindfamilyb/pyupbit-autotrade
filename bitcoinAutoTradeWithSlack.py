@@ -41,7 +41,7 @@ def get_ma5(ticker):
 
 def get_ma5_checked_try_symbol_list(try_symbol_list):
     for try_symbol in try_symbol_list:
-        if get_ma5(try_symbol) > get_current_price(try_symbol):
+        if get_ma5(try_symbol) < get_current_price(try_symbol):
             ma5_checked_try_symbol_list.append(try_symbol)
     return ma5_checked_try_symbol_list
 
@@ -81,6 +81,26 @@ def get_current_price(ticker):
     """현재가 조회"""
     return pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]
 
+def get_target_price_buy_percent(try_symbol_list):
+    # 5일 이평선 이상인 종목 가져오기
+    for try_symbol in try_symbol_list:
+        if get_ma5(try_symbol) < get_current_price(try_symbol):
+            ma5_checked_try_symbol_list.append(try_symbol)
+
+    if len(ma5_checked_try_symbol_list) == 3:
+        target_buy_count = 3
+        buy_percent = 0.33
+    elif len(ma5_checked_try_symbol_list) == 2:
+        target_buy_count = 2
+        buy_percent = 0.5
+    elif len(ma5_checked_try_symbol_list) == 1:
+        target_buy_count = 1
+        buy_percent = 1
+    elif len(ma5_checked_try_symbol_list) == 0:
+        target_buy_count = 0
+        buy_percent = 0
+    return target_buy_count, buy_percent
+
 # 로그인
 upbit = pyupbit.Upbit(access, secret)
 
@@ -100,8 +120,13 @@ while True:
         stock_dict = get_stock_balance() # 보유 코인 조회
         for purchased_sym in stock_dict:
             bought_list.append(purchased_sym)
-        target_buy_count = 3 # 매수할 종목 수
-        buy_percent = 0.33 # 종목당 매수 금액 비율
+
+        # target_buy_count, buy_percent 변수 초기화 및 5일이평선 이상인 코인에 대해 유동적으로 적용될수 있도록 수정
+        target_buy_count = 0 
+        buy_percent = 0
+        target_buy_count = get_target_price_buy_percent(try_symbol_list)[0]
+        buy_percent = get_target_price_buy_percent(try_symbol_list)[1]
+
         buy_amount = total_cash * buy_percent  # 종목별 주문 금액 계산
         soldout = False
         now = datetime.datetime.now()
