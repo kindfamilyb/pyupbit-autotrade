@@ -116,6 +116,10 @@ while True:
                 for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
                     target_price = get_target_price(ma5_checked_try_symbol, 0.5)
                     current_price = get_current_price(ma5_checked_try_symbol)
+                    if target_price < current_price:
+                        buy_qty = 0 # 매수할 수량 초기화
+                        buy_qty = int(buy_amount // current_price)
+                        if buy_qty > 0:
                 krw = get_balance("KRW")
                 if krw > 5000:
                                 buy_result = upbit.buy_market_order(ma5_checked_try_symbol, krw*0.9995)
