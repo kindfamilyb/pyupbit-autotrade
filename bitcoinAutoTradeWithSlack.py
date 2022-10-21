@@ -46,6 +46,7 @@ def get_ma5(ticker):
     return ma5
 
 def get_ma5_checked_try_symbol_list(try_symbol_list):
+    ma5_checked_try_symbol_list = []
     for try_symbol in try_symbol_list:
         if get_ma5(try_symbol) < get_current_price(try_symbol):
             ma5_checked_try_symbol_list.append(try_symbol)
@@ -63,31 +64,12 @@ def get_balance(ticker):
     return 0
 
 def get_stock_balance():
-    bought_list = [x['currency'] for x in upbit.get_balances()]
+    bought_list = [x['currency'] for x in upbit.get_balances() if x['currency'] != "KRW"]
     return bought_list
 
-def get_total_balances_alert(try_symbol_list):
-    """접속확인 및 잔고표시 알람"""
-    # 변경할 사항 : ma5이평선 이상 종목 및 타겟프라이스 표시해주기
-    ma5_checked_try_symbol_list = []
-    ma5_checked_try_symbol_list = get_ma5_checked_try_symbol_list(try_symbol_list)
-
-    if len(ma5_checked_try_symbol_list) == 0:
-        print("하락장")
-        return
-    
-    print("상승장(매수예정코인리스트)")
-    post_message(myToken,"#crypto", "상승장(매수예정코인리스트)") 
-    for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
-        # 표시해줄 요소
-        # 티커 : 현재가 / 타겟프라이스 
-        message = f'{ma5_checked_try_symbol} {get_current_price(ma5_checked_try_symbol)} / {get_target_price(ma5_checked_try_symbol, 0.5)}'
-        print(message)
-        post_message(myToken,"#crypto", message) 
-
-
 def get_target_price_buy_percent(try_symbol_list):
-    # 5일 이평선 이상인 종목 가져오기
+    # 5일 이평선인 종목 숫자와 투자비중가져오기
+    ma5_checked_try_symbol_list = []
     for try_symbol in try_symbol_list:
         if get_ma5(try_symbol) < get_current_price(try_symbol):
             ma5_checked_try_symbol_list.append(try_symbol)
@@ -106,29 +88,47 @@ def get_target_price_buy_percent(try_symbol_list):
         buy_percent = 0
     return target_buy_count, buy_percent
 
-# 로그인
+def check_target_alert(try_symbol_list):
+    """접속확인 및 타겟프라이스 확인"""
+    ma5_checked_try_symbol_list = []
+    ma5_checked_try_symbol_list = get_ma5_checked_try_symbol_list(try_symbol_list)
+
+    if len(ma5_checked_try_symbol_list) == 0:
+        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        print(f"하락장-매수예정코인없음({now})")
+        post_message(myToken,"#crypto", f"하락장-매수예정코인없음({now})")
+        return
+
+    post_message(myToken,"#crypto", "상승장-매수예정코인리스트") 
+    for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
+        message = f'{ma5_checked_try_symbol} : {get_current_price(ma5_checked_try_symbol)} / {get_target_price(ma5_checked_try_symbol, 0.5)}'
+        print(message)
+        post_message(myToken,"#crypto", message) 
+
+# 업비트 로그인
 upbit = pyupbit.Upbit(access, secret)
 
 # 시작 메세지(잔고,시작메시지) 슬랙 전송
-get_total_balances_alert()
 print("autotrade start")
 post_message(myToken,"#crypto", "autotrade start") 
+check_target_alert(try_symbol_list)
 
-while True:
-    try:
-        # 매수 희망 종목 리스트중 '5일이평선 이상' 조건 종목만 추려내기
+try:
+    while True:
+        # 매수 희망 종목 리스트중 '5일 이평선 이상' 조건 종목만 추려내기
         ma5_checked_try_symbol_list = []
         ma5_checked_try_symbol_list = get_ma5_checked_try_symbol_list(try_symbol_list)
 
-        bought_list = [] # 매수 완료된 종목 리스트
+        bought_list = [] # 매수 완료된 코인 리스트
         total_cash = get_balance("KRW") # 보유 현금 조회
         stock_dict = get_stock_balance() # 보유 코인 조회
         for purchased_sym in stock_dict:
             bought_list.append(purchased_sym)
 
-        # target_buy_count, buy_percent 변수 초기화 및 5일이평선 이상인 코인에 대해 유동적으로 적용될수 있도록 수정
-        target_buy_count = 0 
-        buy_percent = 0
+        # target_buy_count, buy_percent 변수 초기화 
+        # 5일이평선 이상인 코인에 대해 투자비중유동적으로 적용될 수 있도록 수정
+        target_buy_count = 0 # 최대 매수 코인수
+        buy_percent = 0 # 코인당 매수 비중
         target_buy_count = get_target_price_buy_percent(try_symbol_list)[0]
         buy_percent = get_target_price_buy_percent(try_symbol_list)[1]
 
@@ -138,9 +138,9 @@ while True:
         start_time = get_start_time("KRW-BTC")
         end_time = start_time + datetime.timedelta(days=1)
 
-        # 매일 3,6,9,12,15,18,21,24시 30분에 접속확인 알람
+        # 매일 3의 배수 시간 30분에 접속확인 알람
         if now.hour % 3 == 0 and now.minute == 30 and now.second <= 5:
-            get_total_balances_alert()
+            check_target_alert(try_symbol_list)
             time.sleep(5)
 
         if start_time < now < end_time - datetime.timedelta(seconds=10):
@@ -149,23 +149,20 @@ while True:
                     target_price = get_target_price(ma5_checked_try_symbol, 0.5)
                     current_price = get_current_price(ma5_checked_try_symbol)
                     if target_price < current_price:
-                        buy_qty = 0 # 매수할 수량 초기화
-                        buy_qty = int(buy_amount // current_price)
-                        if buy_qty > 0:
-                            krw = get_balance("KRW")
-                            if krw > 5000:
-                                buy_result = upbit.buy_market_order(ma5_checked_try_symbol, krw*0.9995)
-                                post_message(myToken,"#crypto", f'{ma5_checked_try_symbol} buy : {str(buy_result)}' )
-                                soldout = False
+                        krw = get_balance("KRW")
+                        if krw > 5000:
+                            buy_result = upbit.buy_market_order(ma5_checked_try_symbol, krw*0.9995)
+                            post_message(myToken,"#crypto", f'{ma5_checked_try_symbol} buy : {str(buy_result)}' )
+                            soldout = False
         else:
             for sym in bought_list:
                 coin_balance = get_balance(sym)
                 changed_sym_for_sell = 'KRW-' + sym[0:]
                 sell_result = upbit.sell_market_order(changed_sym_for_sell, coin_balance)
-                post_message(myToken,"#crypto", f'BTC buy :{str(sell_result)}')
+                post_message(myToken,"#crypto", f'{sym} sell :{str(sell_result)}')
             soldout = True
         time.sleep(1)
-    except Exception as e:
-        print(e)
-        post_message(myToken,"#crypto", e)
-        time.sleep(1)
+except Exception as e:
+    print(e)
+    post_message(myToken,"#crypto", e)
+    time.sleep(1)
