@@ -151,7 +151,7 @@ try:
                     if target_price < current_price:
                         krw = get_balance("KRW")
                         if krw > 5000:
-                            buy_result = upbit.buy_market_order(ma5_checked_try_symbol, krw*0.9995)
+                            buy_result = upbit.buy_market_order(ma5_checked_try_symbol, buy_amount*0.9995)
                             post_message(myToken,"#crypto", f'{ma5_checked_try_symbol} buy : {str(buy_result)}' )
                             soldout = False
         else:
