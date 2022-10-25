@@ -150,10 +150,10 @@ try:
             if len(bought_list) < target_buy_count:
                 for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
                     if ma5_checked_try_symbol not in bought_list:
-                    target_price = get_target_price(ma5_checked_try_symbol, 0.5)
-                    current_price = get_current_price(ma5_checked_try_symbol)
-                    if target_price < current_price:
-                        krw = get_balance("KRW")
+                        target_price = get_target_price(ma5_checked_try_symbol, 0.5)
+                        current_price = get_current_price(ma5_checked_try_symbol)
+                        if target_price < current_price:
+                            krw = get_balance("KRW")
                             if krw > 5000 and buy_amount > 5000:
                                 print(f"구매직전구매목록: {bought_list}/구매직전타겟가격: {target_price}/구매직전요청금액: {buy_amount}")
                                 post_message(myToken,"#crypto", f"구매직전구매목록: {bought_list}/구매직전타겟가격: {target_price}/구매직전요청금액: {buy_amount}")
