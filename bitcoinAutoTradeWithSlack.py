@@ -92,14 +92,15 @@ def check_target_alert(try_symbol_list):
     """접속확인 및 타겟프라이스 확인"""
     ma5_checked_try_symbol_list = []
     ma5_checked_try_symbol_list = get_ma5_checked_try_symbol_list(try_symbol_list)
+    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     if len(ma5_checked_try_symbol_list) == 0:
-        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         print(f"하락장-매수예정코인없음({now})")
         post_message(myToken,"#crypto", f"하락장-매수예정코인없음({now})")
         return
 
-    post_message(myToken,"#crypto", "상승장-매수예정코인리스트") 
+    print(f"상승장-매수예정코인리스트({now})")
+    post_message(myToken,"#crypto", f"상승장-매수예정코인리스트({now})") 
     for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
         message = f'{ma5_checked_try_symbol} : {get_current_price(ma5_checked_try_symbol)} / {get_target_price(ma5_checked_try_symbol, 0.5)}'
         print(message)
@@ -140,6 +141,8 @@ try:
 
         # 매일 3의 배수 시간 30분에 접속확인 알람
         if now.hour % 3 == 0 and now.minute == 30 and now.second <= 5:
+            print(f"현재구매목록: {bought_list}")
+            post_message(myToken,"#crypto", f"현재구매목록: {bought_list}")
             check_target_alert(try_symbol_list)
             time.sleep(5)
 
@@ -152,8 +155,11 @@ try:
                     if target_price < current_price:
                         krw = get_balance("KRW")
                             if krw > 5000 and buy_amount > 5000:
+                                print(f"구매직전구매목록: {bought_list}/구매직전타겟가격: {target_price}/구매직전요청금액: {buy_amount}")
+                                post_message(myToken,"#crypto", f"구매직전구매목록: {bought_list}/구매직전타겟가격: {target_price}/구매직전요청금액: {buy_amount}")
                             buy_result = upbit.buy_market_order(ma5_checked_try_symbol, buy_amount*0.9995)
                             post_message(myToken,"#crypto", f'{ma5_checked_try_symbol} buy : {str(buy_result)}' )
+                                check_target_alert(try_symbol_list)
                             soldout = False
         else:
             for sym in bought_list:
