@@ -157,10 +157,10 @@ try:
                             if krw > 5000 and buy_amount > 5000:
                                 print(f"구매직전구매목록: {bought_list}/구매직전타겟가격: {target_price}/구매직전요청금액: {buy_amount}")
                                 post_message(myToken,"#crypto", f"구매직전구매목록: {bought_list}/구매직전타겟가격: {target_price}/구매직전요청금액: {buy_amount}")
-                            buy_result = upbit.buy_market_order(ma5_checked_try_symbol, buy_amount*0.9995)
-                            post_message(myToken,"#crypto", f'{ma5_checked_try_symbol} buy : {str(buy_result)}' )
+                                buy_result = upbit.buy_market_order(ma5_checked_try_symbol, buy_amount*0.9995)
+                                post_message(myToken,"#crypto", f'{ma5_checked_try_symbol} buy : {str(buy_result)}' )
                                 check_target_alert(try_symbol_list)
-                            soldout = False
+                                soldout = False
         else:
             for sym in bought_list:
                 coin_balance = get_balance(sym)
