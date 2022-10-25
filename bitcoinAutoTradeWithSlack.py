@@ -146,6 +146,7 @@ try:
         if start_time < now < end_time - datetime.timedelta(seconds=10):
             if len(bought_list) < target_buy_count:
                 for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
+                    if ma5_checked_try_symbol not in bought_list:
                     target_price = get_target_price(ma5_checked_try_symbol, 0.5)
                     current_price = get_current_price(ma5_checked_try_symbol)
                     if target_price < current_price:
