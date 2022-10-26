@@ -9,6 +9,7 @@ with open('config.yaml', encoding='UTF-8') as f:
 upbit_access = _cfg['UPBIT_ACCESS']
 upbit_secret = _cfg['UPBIT_SECRET']
 slack_myToken = _cfg['SLACK_TOKEN']
+DISCORD_WEBHOOK_URL = _cfg['DISCORD_WEBHOOK_URL']
 
 access = upbit_access
 secret = upbit_secret
@@ -22,6 +23,13 @@ def post_message(token, channel, text):
         headers={"Authorization": "Bearer "+token},
         data={"channel": channel,"text": text}
     )
+
+def send_message(msg):
+    """디스코드 메세지 전송"""
+    now = datetime.datetime.now()
+    message = {"content": f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] {str(msg)}"}
+    requests.post(DISCORD_WEBHOOK_URL, data=message)
+    print(message)
 
 def get_target_price(ticker, k):
     """변동성 돌파 전략으로 매수 목표가 조회"""
@@ -96,22 +104,22 @@ def check_target_alert(try_symbol_list):
 
     if len(ma5_checked_try_symbol_list) == 0:
         print(f"하락장-매수예정코인없음({now})")
-        post_message(myToken,"#crypto", f"하락장-매수예정코인없음({now})")
+        send_message(f"하락장-매수예정코인없음({now})")
         return
 
     print(f"상승장-매수예정코인리스트({now})")
-    post_message(myToken,"#crypto", f"상승장-매수예정코인리스트({now})") 
+    send_message(f"상승장-매수예정코인리스트({now})") 
     for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
         message = f'{ma5_checked_try_symbol} : {get_current_price(ma5_checked_try_symbol)} / {get_target_price(ma5_checked_try_symbol, 0.5)}'
         print(message)
-        post_message(myToken,"#crypto", message) 
+        send_message(message) 
 
 # 업비트 로그인
 upbit = pyupbit.Upbit(access, secret)
 
 # 시작 메세지(잔고,시작메시지) 슬랙 전송
 print("autotrade start")
-post_message(myToken,"#crypto", "autotrade start") 
+send_message("autotrade start") 
 check_target_alert(try_symbol_list)
 
 try:
@@ -140,9 +148,9 @@ try:
         end_time = start_time + datetime.timedelta(days=1)
 
         # 매일 3의 배수 시간 30분에 접속확인 알람
-        if now.hour % 3 == 0 and now.minute == 30 and now.second <= 5:
+        if now.minute == 30 and now.second <= 5:
             print(f"현재구매목록: {bought_list}")
-            post_message(myToken,"#crypto", f"현재구매목록: {bought_list}")
+            send_message(f"현재구매목록: {bought_list}")
             check_target_alert(try_symbol_list)
             time.sleep(5)
 
@@ -156,9 +164,9 @@ try:
                             krw = get_balance("KRW")
                             if krw > 5000 and buy_amount > 5000:
                                 print(f"구매직전구매목록: {bought_list}/구매직전타겟가격: {target_price}/구매직전요청금액: {buy_amount}")
-                                post_message(myToken,"#crypto", f"구매직전구매목록: {bought_list}/구매직전타겟가격: {target_price}/구매직전요청금액: {buy_amount}")
+                                send_message(f"구매직전구매목록: {bought_list}/구매직전타겟가격: {target_price}/구매직전요청금액: {buy_amount}")
                                 buy_result = upbit.buy_market_order(ma5_checked_try_symbol, buy_amount*0.9995)
-                                post_message(myToken,"#crypto", f'{ma5_checked_try_symbol} buy : {str(buy_result)}' )
+                                send_message(f"{ma5_checked_try_symbol} buy : {str(buy_result)}" )
                                 check_target_alert(try_symbol_list)
                                 soldout = False
         else:
@@ -166,10 +174,10 @@ try:
                 coin_balance = get_balance(sym)
                 changed_sym_for_sell = 'KRW-' + sym[0:]
                 sell_result = upbit.sell_market_order(changed_sym_for_sell, coin_balance)
-                post_message(myToken,"#crypto", f'{sym} sell :{str(sell_result)}')
+                send_message(f"{sym} sell :{str(sell_result)}")
             soldout = True
         time.sleep(1)
 except Exception as e:
     print(e)
-    post_message(myToken,"#crypto", e)
+    send_message(e)
     time.sleep(1)
