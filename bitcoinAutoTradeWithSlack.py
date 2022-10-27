@@ -110,7 +110,7 @@ def check_target_alert(try_symbol_list):
     print(f"상승장-매수예정코인리스트({now})")
     send_message(f"상승장-매수예정코인리스트({now})") 
     for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
-        message = f'{ma5_checked_try_symbol} : {get_current_price(ma5_checked_try_symbol)} / {get_target_price(ma5_checked_try_symbol, 0.5)}'
+        message = f"{ma5_checked_try_symbol} : {get_current_price(ma5_checked_try_symbol)} (현재가) / {get_target_price(ma5_checked_try_symbol, 0.5)} (타겟가)"
         print(message)
         send_message(message) 
 
@@ -147,7 +147,7 @@ try:
         start_time = get_start_time("KRW-BTC")
         end_time = start_time + datetime.timedelta(days=1)
 
-        # 매일 3의 배수 시간 30분에 접속확인 알람
+        # 매시간 30분에 접속확인 알람
         if now.minute == 30 and now.second <= 5:
             print(f"현재구매목록: {bought_list}")
             send_message(f"현재구매목록: {bought_list}")
@@ -163,8 +163,8 @@ try:
                         if target_price < current_price:
                             krw = get_balance("KRW")
                             if krw > 5000 and buy_amount > 5000:
-                                print(f"구매직전구매목록: {bought_list}/구매직전타겟가격: {target_price}/구매직전요청금액: {buy_amount}")
-                                send_message(f"구매직전구매목록: {bought_list}/구매직전타겟가격: {target_price}/구매직전요청금액: {buy_amount}")
+                                print(f"구매직전구매목록: {bought_list}/구매직전타겟가: {target_price}/구매직전요청금액: {buy_amount}/ 구매직전매수비중: {buy_percent}")
+                                send_message(f"구매직전구매목록: {bought_list}/구매직전타겟가: {target_price}/구매직전요청금액: {buy_amount}구매직전매수비중: {buy_percent}")
                                 buy_result = upbit.buy_market_order(ma5_checked_try_symbol, buy_amount*0.9995)
                                 send_message(f"{ma5_checked_try_symbol} buy : {str(buy_result)}" )
                                 check_target_alert(try_symbol_list)
