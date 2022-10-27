@@ -1,0 +1,1 @@
+pm2 start bitcoinAutoTradeWithSlack.py --name "upbitAutoTrade" --interpreter python3
