@@ -19,11 +19,11 @@ myToken = slack_myToken
 
 try_symbol_list = ["KRW-BTC","KRW-XRP","KRW-ETH"] # 매수 희망 종목 리스트
 
-def post_message(text):
+def post_message(token, channel, text):
     """슬랙 메시지 전송"""
     response = requests.post("https://slack.com/api/chat.postMessage",
-        headers={"Authorization": "Bearer "+myToken},
-        data={"channel": "#crypto","text": text}
+        headers={"Authorization": "Bearer "+token},
+        data={"channel": channel,"text": text}
     )
 
 def send_message(msg):
@@ -35,7 +35,9 @@ def send_message(msg):
 
 def get_target_price(ticker, k):
     """변동성 돌파 전략으로 매수 목표가 조회"""
-    df = pyupbit.get_daily_ohlcv_from_base(ticker=ticker, base=23.99)[-2:]
+    df = pyupbit.get_daily_ohlcv_from_base(ticker=ticker, base=23.99)
+    df = df[-2:]
+
     target_price = df.iloc[0]['close'] + (df.iloc[0]['high'] - df.iloc[0]['low']) * k
     return target_price
 
@@ -45,13 +47,15 @@ def get_current_price(ticker):
 
 def get_start_time(ticker):
     """시작 시간 조회"""
-    df = pyupbit.get_daily_ohlcv_from_base(ticker=ticker, base=23.99)[-1:]
+    df = pyupbit.get_daily_ohlcv_from_base(ticker=ticker, base=23.99)
+    df = df[-1:]
     start_time = df.index[0]
     return start_time
 
 def get_ma5(ticker):
     """5일 이동 평균선 조회"""
-    df = pyupbit.get_daily_ohlcv_from_base(ticker=ticker, base=23.99)[4:]
+    df = pyupbit.get_daily_ohlcv_from_base(ticker=ticker, base=23.99)
+    df = df[4:]
     ma5 = df['close'].rolling(5).mean().iloc[-1]
     return ma5
 
@@ -106,22 +110,22 @@ def check_target_alert(try_symbol_list):
 
     if len(ma5_checked_try_symbol_list) == 0:
         print(f"하락장-매수예정코인없음({now})")
-        post_message(f"하락장-매수예정코인없음({now})")
+        send_message(f"하락장-매수예정코인없음({now})")
         return
 
     print(f"상승장-매수예정코인리스트({now})")
-    post_message(f"상승장-매수예정코인리스트({now})") 
+    send_message(f"상승장-매수예정코인리스트({now})") 
     for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
         message = f"{ma5_checked_try_symbol} : {get_current_price(ma5_checked_try_symbol)} (현재가) / {get_target_price(ma5_checked_try_symbol, 0.5)} (타겟가)"
         print(message)
-        post_message(message) 
+        send_message(message) 
 
 # 업비트 로그인
 upbit = pyupbit.Upbit(access, secret)
 
 # 시작 메세지(잔고,시작메시지) 슬랙 전송
 print("autotrade start")
-post_message("autotrade start") 
+send_message("autotrade start") 
 check_target_alert(try_symbol_list)
 
 try:
@@ -140,8 +144,10 @@ try:
         # 5일이평선 이상인 코인에 대해 투자비중유동적으로 적용될 수 있도록 수정
         target_buy_count = 0 # 최대 매수 코인수
         buy_percent = 0 # 코인당 매수 비중
-        target_buy_count = get_target_price_buy_percent(try_symbol_list)[0]
-        buy_percent = get_target_price_buy_percent(try_symbol_list)[1]
+        target_buy_count = get_target_price_buy_percent(try_symbol_list)
+        target_buy_count = target_buy_count[0]
+        buy_percent = get_target_price_buy_percent(try_symbol_list)
+        buy_percent = buy_percent[1]
 
         buy_amount = total_cash * buy_percent  # 종목별 주문 금액 계산
         soldout = False
@@ -152,7 +158,7 @@ try:
         # 매시간 30분에 접속확인 알람
         if now.minute == 30 and now.second <= 5:
             print(f"현재구매목록: {bought_list}")
-            post_message(f"현재구매목록: {bought_list}")
+            send_message(f"현재구매목록: {bought_list}")
             check_target_alert(try_symbol_list)
             time.sleep(5)
 
@@ -166,9 +172,9 @@ try:
                             krw = get_balance("KRW")
                             if krw > 5000 and buy_amount > 5000:
                                 print(f"구매직전구매목록: {bought_list}/구매직전타겟가: {target_price}/구매직전요청금액: {buy_amount}/ 구매직전매수비중: {buy_percent}")
-                                post_message(f"구매직전구매목록: {bought_list}/구매직전타겟가: {target_price}/구매직전요청금액: {buy_amount}구매직전매수비중: {buy_percent}")
+                                send_message(f"구매직전구매목록: {bought_list}/구매직전타겟가: {target_price}/구매직전요청금액: {buy_amount}구매직전매수비중: {buy_percent}")
                                 buy_result = upbit.buy_market_order(ma5_checked_try_symbol, buy_amount*0.9995)
-                                post_message(f"{ma5_checked_try_symbol} buy : {str(buy_result)}" )
+                                send_message(f"{ma5_checked_try_symbol} buy : {str(buy_result)}" )
                                 check_target_alert(try_symbol_list)
                                 soldout = False
         else:
@@ -176,10 +182,10 @@ try:
                 coin_balance = get_balance(sym)
                 changed_sym_for_sell = 'KRW-' + sym[0:]
                 sell_result = upbit.sell_market_order(changed_sym_for_sell, coin_balance)
-                post_message(f"{sym} sell :{str(sell_result)}")
+                send_message(f"{sym} sell :{str(sell_result)}")
             soldout = True
         time.sleep(1)
 except Exception as e:
     print(e)
-    post_message(e)
+    send_message(e)
     time.sleep(1)
