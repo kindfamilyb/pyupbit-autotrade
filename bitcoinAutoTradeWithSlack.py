@@ -3,6 +3,8 @@ import pyupbit
 import datetime
 import requests
 import yaml
+import warnings 
+warnings.simplefilter(action='ignore', category=FutureWarning) # FutureWarning 제거
 
 with open('config.yaml', encoding='UTF-8') as f:
     _cfg = yaml.load(f, Loader=yaml.FullLoader)
