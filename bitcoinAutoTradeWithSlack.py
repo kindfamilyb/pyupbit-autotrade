@@ -120,6 +120,24 @@ def check_target_alert(try_symbol_list):
         print(message)
         send_message(message) 
 
+def send_buy_order(ma5_checked_try_symbol, buy_amount):
+    print(f"구매직전구매목록: {bought_list}/구매직전타겟가: {target_price}/구매직전요청금액: {buy_amount}/ 구매직전매수비중: {buy_percent}")
+    send_message(f"구매직전구매목록: {bought_list}/구매직전타겟가: {target_price}/구매직전요청금액: {buy_amount}구매직전매수비중: {buy_percent}")
+    
+    buy_result = upbit.buy_market_order(ma5_checked_try_symbol, buy_amount*0.9995)
+    send_message(f"{ma5_checked_try_symbol} buy : {str(buy_result)}" )
+    check_target_alert(try_symbol_list)
+    
+    soldout = False
+
+def send_sell_all_balances(bought_list):
+    for sym in bought_list:
+        coin_balance = get_balance(sym)
+        changed_sym_for_sell = 'KRW-' + sym[0:]
+        sell_result = upbit.sell_market_order(changed_sym_for_sell, coin_balance)
+        send_message(f"{sym} sell :{str(sell_result)}")
+    soldout = True
+
 # 업비트 로그인
 upbit = pyupbit.Upbit(access, secret)
 
@@ -171,19 +189,9 @@ try:
                         if target_price < current_price:
                             krw = get_balance("KRW")
                             if krw > 5000 and buy_amount > 5000:
-                                print(f"구매직전구매목록: {bought_list}/구매직전타겟가: {target_price}/구매직전요청금액: {buy_amount}/ 구매직전매수비중: {buy_percent}")
-                                send_message(f"구매직전구매목록: {bought_list}/구매직전타겟가: {target_price}/구매직전요청금액: {buy_amount}구매직전매수비중: {buy_percent}")
-                                buy_result = upbit.buy_market_order(ma5_checked_try_symbol, buy_amount*0.9995)
-                                send_message(f"{ma5_checked_try_symbol} buy : {str(buy_result)}" )
-                                check_target_alert(try_symbol_list)
-                                soldout = False
+                                send_buy_order(ma5_checked_try_symbol, buy_amount)
         else:
-            for sym in bought_list:
-                coin_balance = get_balance(sym)
-                changed_sym_for_sell = 'KRW-' + sym[0:]
-                sell_result = upbit.sell_market_order(changed_sym_for_sell, coin_balance)
-                send_message(f"{sym} sell :{str(sell_result)}")
-            soldout = True
+            send_sell_all_balances(bought_list)
         time.sleep(1)
 except Exception as e:
     print(e)
