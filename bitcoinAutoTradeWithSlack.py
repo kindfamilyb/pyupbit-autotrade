@@ -67,7 +67,7 @@ def get_ma5_checked_try_symbol_list(try_symbol_list):
             ma5_checked_try_symbol_list.append(try_symbol)
     return ma5_checked_try_symbol_list
 
-def get_balance(ticker):
+def get_balances(ticker):
     """잔고 조회"""
     balances = upbit.get_balances()
     for b in balances:
@@ -78,7 +78,7 @@ def get_balance(ticker):
                 return 0
     return 0
 
-def get_stock_balance():
+def get_coin_balance_list():
     """매수종목리스트"""
     bought_list = [x['currency'] for x in upbit.get_balances() if x['currency'] != "KRW"]
     return bought_list
@@ -134,10 +134,10 @@ def send_buy_order(ma5_checked_try_symbol, buy_amount):
     
     soldout = False
 
-def send_sell_all_balances(bought_list):
+def send_all_balances_sell_order(bought_list):
     """전량매도"""
     for sym in bought_list:
-        coin_balance = get_balance(sym)
+        coin_balance = get_balances(sym)
         changed_sym_for_sell = 'KRW-' + sym[0:]
         sell_result = upbit.sell_market_order(changed_sym_for_sell, coin_balance)
         send_message(f"{sym} sell :{str(sell_result)}")
@@ -176,18 +176,15 @@ check_target_alert(try_symbol_list)
 
 try:
     while True:
-        # 매수 희망 종목 리스트중 '5일 이평선 이상' 조건 종목만 추려내기
-        ma5_checked_try_symbol_list = []
+        ma5_checked_try_symbol_list = [] # 구매희망 종목 중 5일이평선 이상
         ma5_checked_try_symbol_list = get_ma5_checked_try_symbol_list(try_symbol_list)
 
         bought_list = [] # 매수 완료된 코인 리스트
-        total_cash = get_balance("KRW") # 보유 현금 조회
-        stock_dict = get_stock_balance() # 보유 코인 조회
+        total_cash = get_balances("KRW") # 보유 현금 조회
+        stock_dict = get_coin_balance_list() # 보유 코인 조회
         for purchased_sym in stock_dict:
             bought_list.append(purchased_sym)
 
-        # target_buy_count, buy_percent 변수 초기화 
-        # 5일이평선 이상인 코인에 대해 투자비중유동적으로 적용될 수 있도록 수정
         target_buy_count = 0 # 최대 매수 코인수
         buy_percent = 0 # 코인당 매수 비중
         target_buy_count = get_target_price_buy_percent(try_symbol_list)
@@ -219,15 +216,13 @@ try:
             # 예수금과 매수요청금액이 5천원 이상
             if len(bought_list) < target_buy_count:
                 for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
-                    if ma5_checked_try_symbol not in bought_list:
-                        target_price = get_target_price(ma5_checked_try_symbol, 0.5)
-                        current_price = get_current_price(ma5_checked_try_symbol)
-                        if target_price < current_price:
-                            krw = get_balance("KRW")
-                            if krw > 5000 and buy_amount > 5000:
-                                send_buy_order(ma5_checked_try_symbol, buy_amount)
+                    target_price = get_target_price(ma5_checked_try_symbol, 0.5)
+                    current_price = get_current_price(ma5_checked_try_symbol)
+                    if target_price < current_price:
+                        if total_cash > 5000 and buy_amount > 5000:
+                            send_buy_order(ma5_checked_try_symbol, buy_amount)
         else:
-            send_sell_all_balances(bought_list)
+            send_all_balances_sell_order(bought_list)
         time.sleep(1)
 except Exception as e:
     print(e)
