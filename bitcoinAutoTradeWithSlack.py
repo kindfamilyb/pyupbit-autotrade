@@ -143,7 +143,29 @@ def send_sell_all_balances(bought_list):
         send_message(f"{sym} sell :{str(sell_result)}")
     soldout = True
 
+def get_total_value_rate():
     """계좌수익률"""
+    # 총수익률 = (평가액총액/매입금총액)-1
+    # 평가액총액 = (현재가*매수수량)  
+    # 매입금총액 = 평균매입금*매수수량
+    bought_list_full_info = [x for x in upbit.get_balances() if x['currency'] != "KRW"]
+    balance_value_total = 0
+    balance_buyed_total = 0
+
+    for boughted_stock in bought_list_full_info:
+        changed_ticker = 'KRW-' + boughted_stock['currency']
+        current_price = float(get_current_price(changed_ticker))
+        boughted_stock_f = float(boughted_stock['balance'])
+        avg_buy_price_f = float(boughted_stock['avg_buy_price'])
+        
+        balance_value_total = balance_value_total + current_price * boughted_stock_f
+        balance_buyed_total = balance_buyed_total + avg_buy_price_f * boughted_stock_f
+
+    total_value_rate = (balance_value_total/balance_buyed_total) - 1
+    total_value_rate = round(total_value_rate*100, 2)
+
+    return total_value_rate
+
 # 업비트 로그인
 upbit = pyupbit.Upbit(access, secret)
 
@@ -187,6 +209,14 @@ try:
             time.sleep(5)
 
         if start_time < now < end_time - datetime.timedelta(seconds=10):
+            # 만약 계좌 수익률이 -10%를 넘으면 전량 매도
+            total_value_rate = get_total_value_rate()
+            if total_value_rate < -10:
+                send_all_balances_sell_order(bought_list)
+            
+            # 구매목록이 구매희망종목 수 보다 작으면
+            # 현재가가 매수희망가를 돌파
+            # 예수금과 매수요청금액이 5천원 이상
             if len(bought_list) < target_buy_count:
                 for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
                     if ma5_checked_try_symbol not in bought_list:
