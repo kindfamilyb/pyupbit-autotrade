@@ -53,13 +53,14 @@ def get_start_time(ticker):
     return start_time
 
 def get_ma5(ticker):
-    """5일 이동 평균선 조회"""
+    """5일 이평선 조회"""
     df = pyupbit.get_daily_ohlcv_from_base(ticker=ticker, base=23.99)
     df = df[4:]
     ma5 = df['close'].rolling(5).mean().iloc[-1]
     return ma5
 
 def get_ma5_checked_try_symbol_list(try_symbol_list):
+    """구매희망종목 중 5일 이평선이상종목"""
     ma5_checked_try_symbol_list = []
     for try_symbol in try_symbol_list:
         if get_ma5(try_symbol) < get_current_price(try_symbol):
@@ -78,6 +79,7 @@ def get_balance(ticker):
     return 0
 
 def get_stock_balance():
+    """매수종목리스트"""
     bought_list = [x['currency'] for x in upbit.get_balances() if x['currency'] != "KRW"]
     return bought_list
 
@@ -121,6 +123,7 @@ def check_target_alert(try_symbol_list):
         send_message(message) 
 
 def send_buy_order(ma5_checked_try_symbol, buy_amount):
+    """매수"""
     print(f"구매직전구매목록: {bought_list}/구매직전타겟가: {target_price}/구매직전요청금액: {buy_amount}/ 구매직전매수비중: {buy_percent}")
     send_message(f"구매직전구매목록: {bought_list}/구매직전타겟가: {target_price}/구매직전요청금액: {buy_amount}구매직전매수비중: {buy_percent}")
     
@@ -131,6 +134,7 @@ def send_buy_order(ma5_checked_try_symbol, buy_amount):
     soldout = False
 
 def send_sell_all_balances(bought_list):
+    """전량매도"""
     for sym in bought_list:
         coin_balance = get_balance(sym)
         changed_sym_for_sell = 'KRW-' + sym[0:]
@@ -138,6 +142,7 @@ def send_sell_all_balances(bought_list):
         send_message(f"{sym} sell :{str(sell_result)}")
     soldout = True
 
+    """계좌수익률"""
 # 업비트 로그인
 upbit = pyupbit.Upbit(access, secret)
 
