@@ -134,7 +134,6 @@ def send_buy_order(ma5_checked_try_symbol, buy_amount):
     buy_result = upbit.buy_market_order(ma5_checked_try_symbol, buy_amount*0.9995)
     send_message(f"{ma5_checked_try_symbol} buy : {str(buy_result)}" )
     check_target_alert(try_symbol_list)
-    soldout = False
 
 def send_all_balances_sell_order(bought_list):
     """전량매도"""
@@ -143,7 +142,6 @@ def send_all_balances_sell_order(bought_list):
         changed_sym_for_sell = 'KRW-' + sym[0:]
         sell_result = upbit.sell_market_order(changed_sym_for_sell, coin_balance)
         send_message(f"{sym} sell :{str(sell_result)}")
-    soldout = True
 
 def get_total_value_rate():
     """계좌수익률"""
@@ -231,7 +229,6 @@ try:
                     if target_price < current_price:
                         if total_cash > 5000 and buy_amount > 5000:
                             send_buy_order(ma5_checked_try_symbol, buy_amount)
-                            soldout = False
         else:
             send_all_balances_sell_order(bought_list)
         time.sleep(1)
