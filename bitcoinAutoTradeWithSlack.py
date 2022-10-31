@@ -119,8 +119,8 @@ def check_target_alert(try_symbol_list):
         send_message(f"하락장-매수예정코인없음({now})")
         return
 
-    print(f"상승장-매수예정코인리스트({now})")
-    send_message(f"상승장-매수예정코인리스트({now})") 
+    print(f"상승장-매수예정코인리스트")
+    send_message(f"상승장-매수예정코인리스트") 
     for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
         message = f"{ma5_checked_try_symbol} : {get_current_price(ma5_checked_try_symbol)} (현재가) / {get_target_price(ma5_checked_try_symbol, 0.5)} (타겟가)"
         print(message)
@@ -134,7 +134,6 @@ def send_buy_order(ma5_checked_try_symbol, buy_amount):
     buy_result = upbit.buy_market_order(ma5_checked_try_symbol, buy_amount*0.9995)
     send_message(f"{ma5_checked_try_symbol} buy : {str(buy_result)}" )
     check_target_alert(try_symbol_list)
-    
     soldout = False
 
 def send_all_balances_sell_order(bought_list):
@@ -175,6 +174,8 @@ def get_total_value_rate():
 # 시작 메세지(잔고,시작메시지) 슬랙 전송
 print("autotrade start")
 send_message("autotrade start") 
+total_value_rate = get_total_value_rate() # 현재 계좌 수익률
+send_message(f"현재계좌수익률: {total_value_rate}")
 check_target_alert(try_symbol_list)
 
 try:
@@ -183,9 +184,6 @@ try:
         ma5_checked_try_symbol_list = get_ma5_checked_try_symbol_list(try_symbol_list)
 
         bought_list = [] # 매수 완료된 코인 리스트
-        total_value_rate = get_total_value_rate() # 현재 계좌 수익률
-        
-        total_cash = get_balances("KRW") # 보유 현금 조회
         stock_dict = get_coin_balance_list() # 보유 코인 조회
         for purchased_sym in stock_dict:
             bought_list.append(purchased_sym)
@@ -196,12 +194,15 @@ try:
         target_buy_count = target_buy_count[0]
         buy_percent = get_target_price_buy_percent(try_symbol_list)
         buy_percent = buy_percent[1]
-
+        
+        total_cash = get_balances("KRW") # 보유 현금 조회
         buy_amount = total_cash * buy_percent  # 종목별 주문 금액 계산
-        soldout = False
+
         now = datetime.datetime.now()
         start_time = get_start_time("KRW-BTC")
         end_time = start_time + datetime.timedelta(days=1)
+
+        total_value_rate = get_total_value_rate() # 현재 계좌 수익률
 
         # 매시간 30분에 접속확인 알람
         if now.minute == 30 and now.second <= 5:
@@ -228,6 +229,7 @@ try:
                     if target_price < current_price:
                         if total_cash > 5000 and buy_amount > 5000:
                             send_buy_order(ma5_checked_try_symbol, buy_amount)
+                            soldout = False
         else:
             send_all_balances_sell_order(bought_list)
         time.sleep(1)
