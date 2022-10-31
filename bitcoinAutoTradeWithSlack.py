@@ -84,6 +84,7 @@ def get_stock_balance():
     return bought_list
 
 def get_target_price_buy_percent(try_symbol_list):
+    """5일이평선이상 종목투자비중분기"""
     # 5일 이평선인 종목 숫자와 투자비중가져오기
     ma5_checked_try_symbol_list = []
     for try_symbol in try_symbol_list:
