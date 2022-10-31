@@ -154,6 +154,7 @@ def get_total_value_rate():
     bought_list_full_info = [x for x in upbit.get_balances() if x['currency'] != "KRW"]
     balance_value_total = 0
     balance_buyed_total = 0
+    total_value_rate = 0
 
     for boughted_stock in bought_list_full_info:
         changed_ticker = 'KRW-' + boughted_stock['currency']
@@ -182,6 +183,8 @@ try:
         ma5_checked_try_symbol_list = get_ma5_checked_try_symbol_list(try_symbol_list)
 
         bought_list = [] # 매수 완료된 코인 리스트
+        total_value_rate = get_total_value_rate() # 현재 계좌 수익률
+        
         total_cash = get_balances("KRW") # 보유 현금 조회
         stock_dict = get_coin_balance_list() # 보유 코인 조회
         for purchased_sym in stock_dict:
@@ -204,6 +207,8 @@ try:
         if now.minute == 30 and now.second <= 5:
             print(f"현재구매목록: {bought_list}")
             send_message(f"현재구매목록: {bought_list}")
+            print(f"현재계좌수익률: {total_value_rate}")
+            send_message(f"현재계좌수익률: {total_value_rate}")
             check_target_alert(try_symbol_list)
             time.sleep(5)
 
