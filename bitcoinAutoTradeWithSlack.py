@@ -17,7 +17,7 @@ access = upbit_access
 secret = upbit_secret
 myToken = slack_myToken
 
-try_symbol_list = ["KRW-BTC","KRW-XRP","KRW-ETH"] # 매수 희망 종목 리스트
+try_symbol_list = ["KRW-BTC","KRW-XRP","KRW-ETH","KRW-DOGE"] # 매수 희망 종목 리스트
 
 def post_message(token, channel, text):
     """슬랙 메시지 전송"""
