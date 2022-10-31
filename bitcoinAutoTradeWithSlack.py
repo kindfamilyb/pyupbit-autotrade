@@ -19,6 +19,9 @@ myToken = slack_myToken
 
 try_symbol_list = ["KRW-BTC","KRW-ETH","KRW-DOGE"] # 매수 희망 종목 리스트
 
+# 업비트 로그인
+upbit = pyupbit.Upbit(access, secret)
+
 def post_message(token, channel, text):
     """슬랙 메시지 전송"""
     response = requests.post("https://slack.com/api/chat.postMessage",
@@ -166,8 +169,7 @@ def get_total_value_rate():
 
     return total_value_rate
 
-# 업비트 로그인
-upbit = pyupbit.Upbit(access, secret)
+
 
 # 시작 메세지(잔고,시작메시지) 슬랙 전송
 print("autotrade start")
