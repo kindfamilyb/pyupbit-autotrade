@@ -17,7 +17,7 @@ access = upbit_access
 secret = upbit_secret
 myToken = slack_myToken
 
-try_symbol_list = ["KRW-BTC","KRW-ETH","KRW-DOGE"] # 매수 희망 종목 리스트
+try_symbol_list = ["KRW-BTC","KRW-ETC","KRW-ETH","KRW-XRP","KRW-DOGE"] # 매수 희망 종목 리스트 비트코인, 이더리룸, 이더리움클래식, 리플, 도지코인
 
 # 업비트 로그인
 upbit = pyupbit.Upbit(access, secret)
@@ -106,6 +106,9 @@ def get_target_price_buy_percent(try_symbol_list):
     elif len(ma5_checked_try_symbol_list) == 0:
         target_buy_count = 0
         buy_percent = 0
+    else:
+        target_buy_count = 3
+        buy_percent = 0.33
     return target_buy_count, buy_percent
 
 def check_target_alert(try_symbol_list):
