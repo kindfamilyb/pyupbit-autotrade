@@ -12,12 +12,13 @@ upbit_access = _cfg['UPBIT_ACCESS']
 upbit_secret = _cfg['UPBIT_SECRET']
 slack_myToken = _cfg['SLACK_TOKEN']
 DISCORD_WEBHOOK_URL = _cfg['DISCORD_WEBHOOK_URL']
+TRY_COIN_LIST = _cfg['TRY_COIN_LIST']
 
 access = upbit_access
 secret = upbit_secret
 myToken = slack_myToken
 
-try_symbol_list = ["KRW-BTC","KRW-ETC","KRW-ETH","KRW-XRP","KRW-DOGE"] # 매수 희망 종목 리스트 비트코인, 이더리룸, 이더리움클래식, 리플, 도지코인
+try_symbol_list = TRY_COIN_LIST # 매수 희망 종목 리스트 비트코인, 이더리룸, 이더리움클래식, 리플, 도지코인, 비트코인골드
 
 # 업비트 로그인
 upbit = pyupbit.Upbit(access, secret)
