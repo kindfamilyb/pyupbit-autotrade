@@ -165,7 +165,7 @@ def get_total_value_rate():
         balance_value_total = balance_value_total + current_price * boughted_stock_f
         balance_buyed_total = balance_buyed_total + avg_buy_price_f * boughted_stock_f
     
-    if bought_list_full_info != 0:
+    if bought_list_full_info != 0 and balance_buyed_total != 0 and balance_value_total != 0:
         total_value_rate = (balance_value_total/balance_buyed_total) - 1
         total_value_rate = round(total_value_rate*100, 2)
 
