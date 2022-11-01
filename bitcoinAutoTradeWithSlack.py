@@ -165,14 +165,13 @@ def get_total_value_rate():
         balance_value_total = balance_value_total + current_price * boughted_stock_f
         balance_buyed_total = balance_buyed_total + avg_buy_price_f * boughted_stock_f
     
-    if total_value_rate != 0:
+    if bought_list_full_info != 0:
         total_value_rate = (balance_value_total/balance_buyed_total) - 1
         total_value_rate = round(total_value_rate*100, 2)
 
         return total_value_rate
 
-    return "매수코인없음"
-
+    return total_value_rate
 
 # 시작 메세지(잔고,시작메시지) 슬랙 전송
 print("autotrade start")
@@ -220,7 +219,7 @@ try:
             # 만약 계좌 수익률이 -10%를 넘으면 전량 매도
             if len(bought_list) > 0:
                 total_value_rate = get_total_value_rate()
-                if total_value_rate < -10:
+                if float(total_value_rate) < -10:
                     send_all_balances_sell_order(bought_list)
             
             # 구매목록이 구매희망종목 수 보다 작으면
