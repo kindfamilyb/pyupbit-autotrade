@@ -171,6 +171,7 @@ def get_total_value_rate():
 
         return total_value_rate
 
+    return "매수코인없음"
 
 
 # 시작 메세지(잔고,시작메시지) 슬랙 전송
