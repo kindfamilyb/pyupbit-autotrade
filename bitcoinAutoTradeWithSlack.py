@@ -34,7 +34,7 @@ def send_message(msg):
     """디스코드 메세지 전송"""
     now = datetime.datetime.now()
     message = {"content": f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] {str(msg)}"}
-    requests.post(DISCORD_WEBHOOK_URL, data=message)
+    requests.post(DISCORD_WEBHOOK_URL, data=message, headers={'User-Agent': 'Mozilla/5.0'})
     print(message)
 
 def get_target_price(ticker, k):
