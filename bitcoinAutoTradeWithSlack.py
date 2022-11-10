@@ -135,15 +135,15 @@ def check_target_alert(try_symbol_list):
         print(message)
         send_message(message) 
 
-def send_buy_order(ma5_checked_try_symbol, buy_amount):
+def send_buy_order(today_plan_to_buy_coin, today_plan_to_buy_list_list, fluid_buy_amount):
     """매수"""
-    print(f"구매직전구매목록: {bought_list}/구매직전타겟가: {target_price}/구매직전요청금액: {buy_amount}/ 구매직전매수비중: {buy_percent}")
-    send_message(f"구매직전구매목록: {bought_list}/구매직전타겟가: {target_price}/구매직전요청금액: {buy_amount}구매직전매수비중: {buy_percent}")
+    print(f"구매직전구매목록: {today_plan_to_buy_list_list}/구매직전타겟가: {target_price}/구매직전요청금액: {fluid_buy_amount}")
+    send_message(f"구매직전구매목록: {today_plan_to_buy_list_list}/구매직전타겟가: {target_price}/구매직전요청금액: {fluid_buy_amount}")
     
-    buy_result = upbit.buy_market_order(ma5_checked_try_symbol, buy_amount*0.9995)
+    buy_result = upbit.buy_market_order(today_plan_to_buy_coin, fluid_buy_amount*0.9995)
 
-    send_message(f"{ma5_checked_try_symbol} buy : {str(buy_result)}" )
-    check_target_alert(try_symbol_list)
+    send_message(f"{today_plan_to_buy_coin} buy : {str(buy_result)}" )
+    check_target_alert(today_plan_to_buy_list_list)
 
     # 매수기록 db에 저장
     now = datetime.datetime.now()
@@ -322,7 +322,7 @@ try:
 
                 fluid_target_percent = round(2/(yesterday_target_price/get_current_price(today_plan_to_buy_coin))/3, 2)
                 fluid_buy_amount = fluid_target_percent*today_total_cash
-                send_buy_order(today_plan_to_buy_coin, fluid_buy_amount)
+                send_buy_order(today_plan_to_buy_coin, today_plan_to_buy_list_list, fluid_buy_amount)
         else:
             send_all_balances_sell_order(bought_list)
         time.sleep(1)
