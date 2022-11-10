@@ -44,7 +44,6 @@ conn = pymysql.connect(
 upbit = pyupbit.Upbit(access, secret)
 
 # 시작 메세지(잔고,시작메시지) 슬랙 전송
-print("autotrade start")
 ct.send_message("autotrade start") 
 ct.check_target_alert(try_symbol_list)
 
@@ -75,7 +74,6 @@ try:
 
         # 매시간 30분에 접속확인 알람
         if now.minute == 30 and now.second <= 5:
-            print(f"현재구매목록: {bought_list}")
             ct.send_message(f"현재구매목록: {bought_list}")
             if len(bought_list) > 0:
                 total_value_rate = ct.get_total_value_rate() # 현재 계좌 수익률
@@ -115,12 +113,12 @@ try:
 
             # print("step5")
             # 오늘 매수할 종목리스트(ma5, 오늘 안산종목)
-            # [로직점검 상황1]  상승장인 종목은 많지만 산게 하나도 없으면 today_plan_to_buy_list_list로 ma5_checked_try_symbol_list_list가 다 들어와야 하는 상황
-            today_plan_to_buy_list_list = []
-            today_plan_to_buy_list_list = ct.get_today_plan_to_buy_list(ma5_checked_try_symbol_list_list)
+            # [로직점검 상황1]  상승장인 종목은 많지만 산게 하나도 없으면 today_plan_to_buy_list로 ma5_checked_try_symbol_list_list가 다 들어와야 하는 상황
+            today_plan_to_buy_list = []
+            today_plan_to_buy_list = ct.get_today_plan_to_buy_list(ma5_checked_try_symbol_list_list)
 
             # print("step6")
-            for today_plan_to_buy_coin in today_plan_to_buy_list_list:
+            for today_plan_to_buy_coin in today_plan_to_buy_list:
                 target_price = ct.get_target_price(today_plan_to_buy_coin, 0.5)
                 current_price = ct.get_current_price(today_plan_to_buy_coin)
                 
@@ -131,7 +129,7 @@ try:
                 
                 # print("step8")
                 # 오늘 기준에 적합하지만 안산종목이 한개도 없으면 빠져나가기( 살 종목은 다 산상태 )
-                if len(today_plan_to_buy_list_list) == 0:
+                if len(today_plan_to_buy_list) == 0:
                     continue
                 
                 # print("step9")
@@ -146,7 +144,7 @@ try:
 
                 fluid_target_percent = round(2/(yesterday_target_price/ct.get_current_price(today_plan_to_buy_coin))/3, 2)
                 fluid_buy_amount = fluid_target_percent*today_total_cash
-                ct.send_buy_order(today_plan_to_buy_coin, today_plan_to_buy_list_list, target_price, fluid_buy_amount)
+                ct.send_buy_order(today_plan_to_buy_coin, today_plan_to_buy_list, target_price, fluid_buy_amount)
         else:
             ct.send_all_balances_sell_order(bought_list)
         time.sleep(1)

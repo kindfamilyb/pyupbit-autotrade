@@ -85,21 +85,21 @@ def get_ma5_checked_try_symbol_list(try_symbol_list):
 # 구매할 종목리스트 = 구매희망종목들 - 오늘구매한종목들
 def get_today_plan_to_buy_list(ma5_checked_try_symbol_list_list):
     today_bought_coin_list_cursor = conn.cursor()
-    for_today_bought_coin_list_list_sql = "select * from coin_order_log where order_type = 'buy' and TO_CHAR(datetime, 'YYYYMMDD') = TO_CHAR(NOW(), 'YYYYMMDD') order by datetime;"
-    today_bought_coin_list_cursor.execute(for_today_bought_coin_list_list_sql)
-    today_bought_coin_list_tuple = today_bought_coin_list_cursor.fetchall()
+    for_today_bought_coin_list_sql = "select * from coin_order_log where order_type = 'buy' and TO_CHAR(datetime, 'YYYYMMDD') = TO_CHAR(NOW(), 'YYYYMMDD') order by datetime;"
+    today_bought_coin_list_cursor.execute(for_today_bought_coin_list_sql)
+    today_bought_coin_list = today_bought_coin_list_cursor.fetchall()
 
-    today_bought_coin_list_list = []
-    for today_bought_coin_tuple in today_bought_coin_list_tuple:
-        today_bought_coin_list_list.append(today_bought_coin_tuple[0])
+    today_bought_coin_list = []
+    for today_bought_coin_tuple in today_bought_coin_list:
+        today_bought_coin_list.append(today_bought_coin_tuple[0])
 
-    today_bought_coin_list_set = set(today_bought_coin_list_list)
-    ma5_checked_try_symbol_list_set = set(ma5_checked_try_symbol_list_list)
+    today_bought_coin_list = set(today_bought_coin_list)
+    ma5_checked_try_symbol_list = set(ma5_checked_try_symbol_list_list)
 
-    today_plan_to_buy_list_set = ma5_checked_try_symbol_list_set - today_bought_coin_list_set
-    today_plan_to_buy_list_list = list(today_plan_to_buy_list_set)
+    today_plan_to_buy_list = ma5_checked_try_symbol_list - today_bought_coin_list
+    today_plan_to_buy_list = list(today_plan_to_buy_list)
 
-    return today_plan_to_buy_list_list
+    return today_plan_to_buy_list
 
 def get_balances(ticker):
     """잔고 조회"""
@@ -135,15 +135,15 @@ def check_target_alert(try_symbol_list):
         print(message)
         send_message(message) 
 
-def send_buy_order(today_plan_to_buy_coin, today_plan_to_buy_list_list, fluid_buy_amount):
+def send_buy_order(today_plan_to_buy_coin, today_plan_to_buy_list, fluid_buy_amount):
     """매수"""
-    print(f"구매직전구매목록: {today_plan_to_buy_list_list}/구매직전타겟가: {target_price}/구매직전요청금액: {fluid_buy_amount}")
-    send_message(f"구매직전구매목록: {today_plan_to_buy_list_list}/구매직전타겟가: {target_price}/구매직전요청금액: {fluid_buy_amount}")
+    print(f"구매직전구매목록: {today_plan_to_buy_list}/구매직전타겟가: {target_price}/구매직전요청금액: {fluid_buy_amount}")
+    send_message(f"구매직전구매목록: {today_plan_to_buy_list}/구매직전타겟가: {target_price}/구매직전요청금액: {fluid_buy_amount}")
     
     buy_result = upbit.buy_market_order(today_plan_to_buy_coin, fluid_buy_amount*0.9995)
 
     send_message(f"{today_plan_to_buy_coin} buy : {str(buy_result)}" )
-    check_target_alert(today_plan_to_buy_list_list)
+    check_target_alert(today_plan_to_buy_list)
 
     # 매수기록 db에 저장
     now = datetime.datetime.now()
@@ -199,9 +199,9 @@ def get_today_total_cash():
     today_total_cash_cursor = conn.cursor()                
     today_total_cash_sql = "select total_cash from total_cash where TO_CHAR(datetime, 'YYYYMMDD') = TO_CHAR(NOW(), 'YYYYMMDD') order by datetime limit 1;"
     today_total_cash_cursor.execute(today_total_cash_sql)
-    today_today_total_cash_tuple = today_total_cash_cursor.fetchall()
+    today_today_total_cash = today_total_cash_cursor.fetchall()
 
-    today_total_cash = today_today_total_cash_tuple[0][0]
+    today_total_cash = today_today_total_cash[0][0]
     return today_total_cash
 
 
@@ -291,12 +291,12 @@ try:
 
             # print("step5")
             # 오늘 매수할 종목리스트(ma5, 오늘 안산종목)
-            # [로직점검 상황1]  상승장인 종목은 많지만 산게 하나도 없으면 today_plan_to_buy_list_list로 ma5_checked_try_symbol_list_list가 다 들어와야 하는 상황
-            today_plan_to_buy_list_list = []
-            today_plan_to_buy_list_list = get_today_plan_to_buy_list(ma5_checked_try_symbol_list_list)
+            # [로직점검 상황1]  상승장인 종목은 많지만 산게 하나도 없으면 today_plan_to_buy_list로 ma5_checked_try_symbol_list_list가 다 들어와야 하는 상황
+            today_plan_to_buy_list = []
+            today_plan_to_buy_list = get_today_plan_to_buy_list(ma5_checked_try_symbol_list_list)
 
             # print("step6")
-            for today_plan_to_buy_coin in today_plan_to_buy_list_list:
+            for today_plan_to_buy_coin in today_plan_to_buy_list:
                 target_price = get_target_price(today_plan_to_buy_coin, 0.5)
                 current_price = get_current_price(today_plan_to_buy_coin)
                 
@@ -307,7 +307,7 @@ try:
                 
                 # print("step8")
                 # 오늘 기준에 적합하지만 안산종목이 한개도 없으면 빠져나가기( 살 종목은 다 산상태 )
-                if len(today_plan_to_buy_list_list) == 0:
+                if len(today_plan_to_buy_list) == 0:
                     continue
                 
                 # print("step9")
@@ -322,7 +322,7 @@ try:
 
                 fluid_target_percent = round(2/(yesterday_target_price/get_current_price(today_plan_to_buy_coin))/3, 2)
                 fluid_buy_amount = fluid_target_percent*today_total_cash
-                send_buy_order(today_plan_to_buy_coin, today_plan_to_buy_list_list, fluid_buy_amount)
+                send_buy_order(today_plan_to_buy_coin, today_plan_to_buy_list, fluid_buy_amount)
         else:
             send_all_balances_sell_order(bought_list)
         time.sleep(1)
