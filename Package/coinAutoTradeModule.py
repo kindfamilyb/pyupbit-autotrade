@@ -57,7 +57,7 @@ class CoinAutoTradeModule:
         requests.post(DISCORD_WEBHOOK_URL, data=message, headers={'User-Agent': 'Mozilla/5.0'})
         print(message)
 
-    def get_target_price(self, ticker:str, k:float) -> float:
+    def get_target_price(self, ticker:str, k:float=0.5) -> float:
         """변동성 돌파 전략으로 매수 목표가 조회"""
         df = pyupbit.get_daily_ohlcv_from_base(ticker=ticker, base=23.99)
         df = df[-2:]
@@ -69,7 +69,7 @@ class CoinAutoTradeModule:
         """현재가 조회"""
         return pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]
 
-    def get_start_time(self, ticker:str):
+    def get_start_time(self, ticker:str="KRW-BTC"):
         """시작 시간 조회"""
         df = pyupbit.get_daily_ohlcv_from_base(ticker=ticker, base=23.99)
         df = df[-1:]
@@ -87,12 +87,12 @@ class CoinAutoTradeModule:
         """구매희망종목 중 5일 이평선이상종목"""
         ma5_checked_try_symbol_list:list = []
         for try_symbol in try_symbol_list:
-            if self.get_ma5(try_symbol) < self.get_current_price(try_symbol):
+            if self.get_ma5(try_symbol) < self.get_current_price(ticker=try_symbol):
                 ma5_checked_try_symbol_list.append(try_symbol)
         return ma5_checked_try_symbol_list
 
     # 구매할 종목리스트 = 구매희망종목들 - 오늘구매한종목들
-    def get_today_plan_to_buy_list(self, ma5_checked_try_symbol_list_list:list) -> list:
+    def get_today_plan_to_buy_list(self, ma5_checked_try_symbol_list:list) -> list:
         today_bought_coin_list_cursor:object = conn.cursor()
         for_today_bought_coin_list_sql:str = "select * from coin_order_log where order_type = 'buy' and TO_CHAR(datetime, 'YYYYMMDD') = TO_CHAR(NOW(), 'YYYYMMDD') order by datetime;"
         today_bought_coin_list_cursor.execute(for_today_bought_coin_list_sql)
@@ -103,14 +103,14 @@ class CoinAutoTradeModule:
             today_bought_coin_list.append(today_bought_coin_tuple[0])
 
         today_bought_coin_list:set = set(today_bought_coin_list)
-        ma5_checked_try_symbol_list:set = set(ma5_checked_try_symbol_list_list)
+        ma5_checked_try_symbol_list:set = set(ma5_checked_try_symbol_list:list)
 
         today_plan_to_buy_list:set = ma5_checked_try_symbol_list - today_bought_coin_list
         today_plan_to_buy_list:list = list(today_plan_to_buy_list)
 
         return today_plan_to_buy_list
 
-    def get_balances(self, ticker:str) -> float:
+    def get_balances(self, ticker:str="KRW") -> float:
         """잔고 조회"""
         balances:object = upbit.get_balances()
         for b in balances:
@@ -129,7 +129,7 @@ class CoinAutoTradeModule:
     def check_target_alert(self, try_symbol_list:list) -> bool:
         """접속확인 및 타겟프라이스 확인"""
         ma5_checked_try_symbol_list:list = []
-        ma5_checked_try_symbol_list:list = self.get_ma5_checked_try_symbol_list(try_symbol_list)
+        ma5_checked_try_symbol_list:list = self.get_ma5_checked_try_symbol_list(try_symbol_list=try_symbol_list)
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         if len(ma5_checked_try_symbol_list) == 0:
@@ -139,7 +139,7 @@ class CoinAutoTradeModule:
         print(f"상승장-매수예정코인리스트")
         self.send_message(f"상승장-매수예정코인리스트") 
         for ma5_checked_try_symbol in ma5_checked_try_symbol_list:
-            message = f"{ma5_checked_try_symbol} : {self.get_current_price(ma5_checked_try_symbol)} (현재가) / {self.get_target_price(ma5_checked_try_symbol, 0.5)} (타겟가)"
+            message = f"{ma5_checked_try_symbol} : {self.get_current_price(ticker=ma5_checked_try_symbol)} (현재가) / {self.get_target_price(ticker=ma5_checked_try_symbol, k=0.5)} (타겟가)"
             self.send_message(message)
 
     def send_buy_order(self, today_plan_to_buy_coin:str, today_plan_to_buy_list:list, target_price:float, fluid_buy_amount:float) -> bool:
@@ -184,7 +184,7 @@ class CoinAutoTradeModule:
 
         for boughted_stock in bought_list_full_info:
             changed_ticker = 'KRW-' + boughted_stock['currency']
-            current_price = float(self.get_current_price(changed_ticker))
+            current_price = float(self.get_current_price(ticker=changed_ticker))
             boughted_stock_f = float(boughted_stock['balance'])
             avg_buy_price_f = float(boughted_stock['avg_buy_price'])
             
@@ -223,4 +223,4 @@ class CoinAutoTradeModule:
             today_target_time_bought_list.append(today_target_time_bought_tuple[0])
 
         if total_value_rate > 2 or total_value_rate < -2:
-            self.send_all_balances_sell_order(today_target_time_bought_list)
+            self.send_all_balances_sell_order(bought_list=today_target_time_bought_list)
