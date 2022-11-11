@@ -103,7 +103,7 @@ class CoinAutoTradeModule:
             today_bought_coin_list.append(today_bought_coin_tuple[0])
 
         today_bought_coin_list:set = set(today_bought_coin_list)
-        ma5_checked_try_symbol_list:set = set(ma5_checked_try_symbol_list:list)
+        ma5_checked_try_symbol_list:set = set(ma5_checked_try_symbol_list)
 
         today_plan_to_buy_list:set = ma5_checked_try_symbol_list - today_bought_coin_list
         today_plan_to_buy_list:list = list(today_plan_to_buy_list)

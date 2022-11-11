@@ -115,7 +115,7 @@ try:
             # 오늘 매수할 종목리스트(ma5, 오늘 안산종목)
             # [로직점검 상황1]  상승장인 종목은 많지만 산게 하나도 없으면 today_plan_to_buy_list로 ma5_checked_try_symbol_list:list가 다 들어와야 하는 상황
             today_plan_to_buy_list:list = []
-            today_plan_to_buy_list:list = ct.get_today_plan_to_buy_list(ma5_checked_try_symbol_list:list)
+            today_plan_to_buy_list:list = ct.get_today_plan_to_buy_list(ma5_checked_try_symbol_list)
 
             # print("step6")
             for today_plan_to_buy_coin in today_plan_to_buy_list:
