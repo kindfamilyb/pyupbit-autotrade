@@ -94,13 +94,15 @@ class CoinAutoTradeModule:
     # 구매할 종목리스트 = 구매희망종목들 - 오늘구매한종목들
     def get_today_plan_to_buy_list(self, ma5_checked_try_symbol_list:list) -> list:
         today_bought_coin_list_cursor:object = conn.cursor()
-        for_today_bought_coin_list_sql:str = "select * from coin_order_log where order_type = 'buy' and TO_CHAR(datetime, 'YYYYMMDD') = TO_CHAR(NOW(), 'YYYYMMDD') order by datetime;"
+        for_today_bought_coin_list_sql:str = "select DISTINCT ticker from coin_order_log where order_type = 'buy' and TO_CHAR(datetime, 'YYYYMMDD') = TO_CHAR(NOW(), 'YYYYMMDD') order by datetime;"
         today_bought_coin_list_cursor.execute(for_today_bought_coin_list_sql)
-        today_bought_coin_list:tuple = today_bought_coin_list_cursor.fetchall()
+        today_bought_coin_list_tuple = today_bought_coin_list_cursor.fetchall()
+        # print(f"오늘산종목리스트1 {today_bought_coin_list_tuple}")
 
         today_bought_coin_list:list = []
-        for today_bought_coin_tuple in today_bought_coin_list:
+        for today_bought_coin_tuple in today_bought_coin_list_tuple:
             today_bought_coin_list.append(today_bought_coin_tuple[0])
+        # print(f"오늘산종목리스트 {today_bought_coin_list}")
 
         today_bought_coin_list:set = set(today_bought_coin_list)
         ma5_checked_try_symbol_list:set = set(ma5_checked_try_symbol_list)
@@ -145,17 +147,24 @@ class CoinAutoTradeModule:
     def send_buy_order(self, today_plan_to_buy_coin:str, today_plan_to_buy_list:list, target_price:float, fluid_buy_amount:float) -> bool:
         """매수"""
         self.send_message(f"구매직전구매목록: {today_plan_to_buy_list}/구매직전타겟가: {target_price}/구매직전요청금액: {fluid_buy_amount}")
+        print('1')
+
+        check_today_plan_to_buy_coin = []
+        check_today_plan_to_buy_coin:list = [x['currency'] for x in upbit.get_balances() if x['currency'] == today_plan_to_buy_coin[4:]]
         
-        buy_result = upbit.buy_market_order(today_plan_to_buy_coin, fluid_buy_amount*0.9995)
+        print(check_today_plan_to_buy_coin)
+        if len(check_today_plan_to_buy_coin) == 0:
+            # 매수한 코인중에 today_plan_to_buy_coin이 없을때 요청하기
+            buy_result = upbit.buy_market_order(today_plan_to_buy_coin, fluid_buy_amount*0.9995)
+            self.send_message(f"{today_plan_to_buy_coin} buy : {str(buy_result)}" )
+            self.check_target_alert(today_plan_to_buy_list)
 
-        self.send_message(f"{today_plan_to_buy_coin} buy : {str(buy_result)}" )
-        self.check_target_alert(today_plan_to_buy_list)
-
-        # 매수기록 db에 저장
-        now:datetime = datetime.datetime.now()
-        cursor = conn.cursor()
-        cursor.execute(f"INSERT INTO coin_order_log (ticker, buy_amount, order_type, datetime) VALUE ('{self.today_plan_to_buy_coin}','{self.fluid_buy_amount}' ,'buy' ,'{now}')") 
-        cursor.fetchall()
+        # 매수한 코인중에 today_plan_to_buy_coin이 있을때 기록 남기기
+        if len(check_today_plan_to_buy_coin) != 0:
+            now:datetime = datetime.datetime.now()
+            cursor = conn.cursor()
+            cursor.execute(f"INSERT INTO coin_order_log (ticker, buy_amount, order_type, datetime) VALUE ('{today_plan_to_buy_coin}','{fluid_buy_amount}' ,'buy' ,'{now}')") 
+            cursor.fetchall()
 
     def send_all_balances_sell_order(self, bought_list:list) -> bool:
         """전량매도"""
@@ -170,6 +179,7 @@ class CoinAutoTradeModule:
             cursor = conn.cursor()
             cursor.execute(f"INSERT INTO coin_order_log (ticker, buy_amount, order_type, datetime) VALUE ('{sym}','0' ,'sell' ,'{now}')") 
             cursor.fetchall()
+    
 
     def get_total_value_rate(self) -> float:
         """계좌수익률"""
@@ -205,13 +215,13 @@ class CoinAutoTradeModule:
         today_total_cash_cursor = conn.cursor()                
         today_total_cash_sql:str = "select total_cash from total_cash where TO_CHAR(datetime, 'YYYYMMDD') = TO_CHAR(NOW(), 'YYYYMMDD') order by datetime limit 1;"
         today_total_cash_cursor.execute(today_total_cash_sql)
-        today_today_total_cash:tuple = today_total_cash_cursor.fetchall()
+        today_today_total_cash = today_total_cash_cursor.fetchall()
 
         today_total_cash:float = today_today_total_cash[0][0]
         return today_total_cash
 
 
-    def terget_time_buy_coin_sell(self, total_value_rate) -> bool:
+    def target_time_buy_coin_sell(self, total_value_rate, bought_list) -> bool:
         """타겟시간에 구매한 종목은 +-2에서 매도"""
         cursor_for_target_time = conn.cursor()
         sql_for_target_time = "select ticker from coin_order_log where order_type = 'buy' and TO_CHAR(datetime, 'YYYYMMDD') = TO_CHAR(NOW(), 'YYYYMMDD') and date_format(datetime, '%H') > 13 and date_format(datetime, '%H') < 23 order by datetime;"
@@ -223,4 +233,5 @@ class CoinAutoTradeModule:
             today_target_time_bought_list.append(today_target_time_bought_tuple[0])
 
         if total_value_rate > 2 or total_value_rate < -2:
-            self.send_all_balances_sell_order(bought_list=today_target_time_bought_list)
+            print('1')
+            self.send_all_balances_sell_order(bought_list=bought_list)

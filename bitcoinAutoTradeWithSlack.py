@@ -205,7 +205,7 @@ def get_today_total_cash():
     return today_total_cash
 
 
-def terget_time_buy_coin_sell(total_value_rate):
+def target_time_buy_coin_sell(total_value_rate):
     """타겟시간에 구매한 종목은 +-2에서 매도"""
     cursor_for_target_time = conn.cursor()
     sql_for_target_time = "select ticker from coin_order_log where order_type = 'buy' and TO_CHAR(datetime, 'YYYYMMDD') = TO_CHAR(NOW(), 'YYYYMMDD') and date_format(datetime, '%H') > 13 and date_format(datetime, '%H') < 23 order by datetime;"
@@ -270,7 +270,7 @@ try:
                 # 오늘 구매한 종목중에 타겟시간에 매수한 종목이 있다면 전체계좌수익률 +-2구간에서 전량매도
                 # [to-do]개별종목이 +-2일때 매도하는 방향으로 수정해야할것으로 보임
                 if int(now.strftime('%H')) > 13 and int(now.strftime('%H')) < 24:
-                    terget_time_buy_coin_sell(total_value_rate)
+                    target_time_buy_coin_sell(total_value_rate)
                     continue
                 
                 # print("step2")
