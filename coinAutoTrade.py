@@ -67,7 +67,7 @@ try:
         now_total_cash:float = ct.get_balances() # 현재 보유 현금 조회
 
         # 1시1분3초 기준으로 오늘 예수금 기준액 저장
-        if now.hour == 0 and now.minute == 1 and now.second <=3:    
+        if now.hour == 0 and now.minute == 1 and now.second <=15:    
             print('예수금기록')
             for_total_cash_cursor = conn.cursor()
             for_total_cash_sql_massage:str = f"INSERT INTO total_cash (total_cash, datetime) VALUE ('{now_total_cash}','{now}')"
@@ -86,93 +86,96 @@ try:
 
         # print('4')
         # 실행부(비지니스로직)
-        if start_time < now < end_time - datetime.timedelta(seconds=10):
-            # print("step0")
-            # 오늘 매수한 종목이 하나라도 있으면
-            # print('5')
+        # 매수로직 웹소켓으로 전환하고 상승장 알림이로만 활용
+        # if start_time < now < end_time - datetime.timedelta(seconds=10):
+        #     # print("step0")
+        #     # 오늘 매수한 종목이 하나라도 있으면
+        #     # print('5')
 
-            # print('6')
-            # print("step3")
-            # 구매코인의 숫자가 최대구매희망 코인 수 보다 크면 빠져나가기
-            if len(bought_list) >= target_buy_count:
-                continue
+        #     # print('6')
+        #     # print("step3")
+        #     # 구매코인의 숫자가 최대구매희망 코인 수 보다 크면 빠져나가기
+        #     if len(bought_list) >= target_buy_count:
+        #         continue
 
-            # print('7')
-            # print("step4")
-            # 현재 예수금 5천원 이하이면 빠져나가기
-            if now_total_cash < 5000:
-                continue
+        #     # print('7')
+        #     # print("step4")
+        #     # 현재 예수금 5천원 이하이면 빠져나가기
+        #     if now_total_cash < 5000:
+        #         continue
 
-            # print('8')
-            # print("step5")
-            # 오늘 매수할 종목리스트(ma5, 오늘 안산종목)
-            # [로직점검 상황1]  상승장인 종목은 많지만 산게 하나도 없으면 today_plan_to_buy_list로 ma5_checked_try_symbol_list:list가 다 들어와야 하는 상황
-            today_plan_to_buy_list:list = []
-            today_plan_to_buy_list:list = ct.get_today_plan_to_buy_list(ma5_checked_try_symbol_list)
+        #     # print('8')
+        #     # print("step5")
+        #     # 오늘 매수할 종목리스트(ma5, 오늘 안산종목)
+        #     # [로직점검 상황1]  상승장인 종목은 많지만 산게 하나도 없으면 today_plan_to_buy_list로 ma5_checked_try_symbol_list:list가 다 들어와야 하는 상황
+        #     today_plan_to_buy_list:list = []
+        #     today_plan_to_buy_list:list = ct.get_today_plan_to_buy_list(ma5_checked_try_symbol_list)
 
-            # print('9')
-            # print("step6")
-            for today_plan_to_buy_coin in today_plan_to_buy_list:
-                target_price:float = ct.get_target_price(ticker=today_plan_to_buy_coin)
-                current_price:float = ct.get_current_price(ticker=today_plan_to_buy_coin)
+        #     # print('9')
+        #     # print("step6")
+        #     for today_plan_to_buy_coin in today_plan_to_buy_list:
+        #         target_price:float = ct.get_target_price(ticker=today_plan_to_buy_coin)
+        #         current_price:float = ct.get_current_price(ticker=today_plan_to_buy_coin)
 
-                # print('10')
-                # print("step7")
-                # 매수희망가격이 현재가격보다 높으면 빠져나가기
-                if target_price > current_price:
-                    continue
+        #         # print('10')
+        #         # print("step7")
+        #         # 매수희망가격이 현재가격보다 높으면 빠져나가기
+        #         if target_price > current_price:
+        #             continue
 
-                # print('11')
-                # print("step8")
-                # 오늘 기준에 적합하지만 안산종목이 한개도 없으면 빠져나가기( 살 종목은 다 산상태 )
-                print(today_plan_to_buy_list)
-                if len(today_plan_to_buy_list) == 0:
-                    continue
+        #         # print('11')
+        #         # print("step8")
+        #         # 오늘 기준에 적합하지만 안산종목이 한개도 없으면 빠져나가기( 살 종목은 다 산상태 )
+        #         print(today_plan_to_buy_list)
+        #         if len(today_plan_to_buy_list) == 0:
+        #             continue
 
-                # print('12')
-                # print("step9")
-                # 전날변동성에 따라서 투자비중조절
-                df = pyupbit.get_daily_ohlcv_from_base(ticker=today_plan_to_buy_coin, base=23.99)
-                df = df[-1:]
-                yesterday_target_price = df.iloc[0]['close'] + (df.iloc[0]['high'] - df.iloc[0]['low']) * 0.5
+        #         # print('12')
+        #         # print("step9")
+        #         # 전날변동성에 따라서 투자비중조절
+        #         df = pyupbit.get_daily_ohlcv_from_base(ticker=today_plan_to_buy_coin, base=23.99)
+        #         df = df[-1:]
+        #         yesterday_target_price = df.iloc[0]['close'] + (df.iloc[0]['high'] - df.iloc[0]['low']) * 0.5
 
-                # print('13')
-                # 요기가 문제지점
-                # print("step10")
-                # (타깃변동성(2%)/전일변동성((전일고점-전일저점)/현재가)/투자대상가상화폐수
-                today_total_cash = ct.get_today_total_cash()
-                # print(today_total_cash)
+        #         print('13')
+        #         # 요기가 문제지점
+        #         # print("step10")
+        #         # (타깃변동성(2%)/전일변동성((전일고점-전일저점)/현재가)/투자대상가상화폐수
+        #         today_total_cash = ct.get_today_total_cash()
+        #         # today_total_cash = now_total_cash 
+        #         # print(today_total_cash)
 
-                # print('14')
-                fluid_target_percent:float = round(2/(yesterday_target_price/ct.get_current_price(today_plan_to_buy_coin))/3, 2)
-                # print('15')
-                fluid_buy_amount:float = fluid_target_percent*today_total_cash
-                # print('16')
-                # fluid_buy_amount요청금액이 현재 예수금보다 클때 매수요청 넣기
-                if fluid_buy_amount > now_total_cash:
-                    ct.send_buy_order(today_plan_to_buy_coin, today_plan_to_buy_list, target_price, fluid_buy_amount)
-                    # print('17')
+        #         print('14')
+        #         fluid_target_percent:float = round(2/(yesterday_target_price/ct.get_current_price(today_plan_to_buy_coin))/3, 2)
+        #         fluid_buy_amount:float = fluid_target_percent*today_total_cash
+        #         # print(fluid_buy_amount)
+        #         print('15')
+        #         # fluid_buy_amount요청금액이 현재 예수금보다 클때 매수요청 넣기
+        #         if fluid_buy_amount < now_total_cash:
+        #             print('16')
+        #             ct.send_buy_order(today_plan_to_buy_coin, today_plan_to_buy_list, target_price, fluid_buy_amount)
+        #             print('17')
                 
-            if len(bought_list) > 0:
-                # print("step1")
-                total_value_rate:float = ct.get_total_value_rate()
-                # 오늘 구매한 종목중에 타겟시간에 매수한 종목이 있다면 전체계좌수익률 +-2구간에서 전량매도
-                # [to-do]개별종목이 +-2일때 매도하는 방향으로 수정해야할것으로 보임
-                if int(now.strftime('%H')) > 13 and int(now.strftime('%H')) < 24:
-                    # print("step2")
-                    ct.target_time_buy_coin_sell(total_value_rate=total_value_rate, bought_list=bought_list)
-                    continue
+        #     if len(bought_list) > 0:
+        #         # print("step1")
+        #         total_value_rate:float = ct.get_total_value_rate()
+        #         # 오늘 구매한 종목중에 타겟시간에 매수한 종목이 있다면 전체계좌수익률 +-2구간에서 전량매도
+        #         # [to-do]개별종목이 +-2일때 매도하는 방향으로 수정해야할것으로 보임
+        #         if int(now.strftime('%H')) > 13 and int(now.strftime('%H')) < 24:
+        #             # print("step2")
+        #             ct.target_time_buy_coin_sell(total_value_rate=total_value_rate, bought_list=bought_list)
+        #             continue
                 
-                # print("step3")
-                # 만약 계좌 수익률이 -10%를 넘으면 전량 매도
-                if float(total_value_rate) < -10 or float(total_value_rate) > +10:
-                    print('2')
-                    ct.send_all_balances_sell_order(bought_list=bought_list)
-                    continue    
+        #         # print("step3")
+        #         # 만약 계좌 수익률이 -10%를 넘으면 전량 매도
+        #         if float(total_value_rate) < -5 or float(total_value_rate) > +5:
+        #             print('2')
+        #             ct.send_all_balances_sell_order(bought_list=bought_list)
+        #             continue    
             
-        else:
-            print('3')
-            ct.send_all_balances_sell_order(bought_list=bought_list)
+        # else:
+        #     print('3')
+        #     ct.send_all_balances_sell_order(bought_list=bought_list)
         time.sleep(1)
 except Exception as e:
     ct.send_message(msg=e)

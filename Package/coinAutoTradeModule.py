@@ -5,6 +5,7 @@ import pymysql
 import pyupbit
 import requests
 import yaml
+import pprint
 warnings.simplefilter(action='ignore', category=FutureWarning) # FutureWarning 제거
 
 with open('config.yaml', encoding='UTF-8') as f:
@@ -155,14 +156,20 @@ class CoinAutoTradeModule:
         print(check_today_plan_to_buy_coin)
         if len(check_today_plan_to_buy_coin) == 0:
             # 매수한 코인중에 today_plan_to_buy_coin이 없을때 요청하기
+            print('2')
             buy_result = upbit.buy_market_order(today_plan_to_buy_coin, fluid_buy_amount*0.9995)
+            print('3')
             self.send_message(f"{today_plan_to_buy_coin} buy : {str(buy_result)}" )
+            print('4')
             self.check_target_alert(today_plan_to_buy_list)
-
+        print('5')
         # 매수한 코인중에 today_plan_to_buy_coin이 있을때 기록 남기기
         if len(check_today_plan_to_buy_coin) != 0:
+            print('6')
             now:datetime = datetime.datetime.now()
+            print('7')
             cursor = conn.cursor()
+            print('1')
             cursor.execute(f"INSERT INTO coin_order_log (ticker, buy_amount, order_type, datetime) VALUE ('{today_plan_to_buy_coin}','{fluid_buy_amount}' ,'buy' ,'{now}')") 
             cursor.fetchall()
 
@@ -212,12 +219,19 @@ class CoinAutoTradeModule:
 
     def get_today_total_cash(self) -> float:
         """새벽 1시1분 3초이하에서 db에 저장한 기준 예수금 가져오기"""
+        # print('1')
         today_total_cash_cursor = conn.cursor()                
         today_total_cash_sql:str = "select total_cash from total_cash where TO_CHAR(datetime, 'YYYYMMDD') = TO_CHAR(NOW(), 'YYYYMMDD') order by datetime limit 1;"
         today_total_cash_cursor.execute(today_total_cash_sql)
         today_today_total_cash = today_total_cash_cursor.fetchall()
-
-        today_total_cash:float = today_today_total_cash[0][0]
+        if len(today_today_total_cash) == 0:
+            today_total_cash:float = upbit.get_balances()
+        
+        if len(today_today_total_cash) == 1:
+            today_total_cash:float = today_today_total_cash[0][0]
+            # print('2')
+            # print(today_total_cash)
+            
         return today_total_cash
 
 
